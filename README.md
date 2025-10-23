@@ -11,6 +11,13 @@ Mahasiswa sering kesulitan menjaga konsistensi belajar dan mengatur waktu antara
 Selain itu, tidak ada sistem yang mampu mengukur waktu belajar secara otomatis dan menggabungkannya dengan data aktivitas belajar seperti video pembelajaran dari YouTube atau jadwal dari Google Calendar.
 Akibatnya, mahasiswa sulit mengetahui jam belajar efektif, hari paling produktif, dan progres keseluruhan terhadap target belajar mereka.
 
+## Tujuan Proyek
+Membangun sistem pelacakan progres belajar yang dapat:
+- Mengintegrasikan jadwal belajar melalui Google Calendar.
+- Menghitung dan menampilkan progres belajar berdasarkan video yang ditonton dari YouTube.
+- Memberikan notifikasi pengingat belajar secara otomatis.
+- Menyediakan analitik kebiasaan belajar untuk membantu pengguna meningkatkan efektivitas waktu belajar.
+
 ## Fitur Utama
 - Integrasi Google Calendar API
 - Integrasi YouTube API
@@ -29,4 +36,6 @@ Akibatnya, mahasiswa sulit mengetahui jam belajar efektif, hari paling produktif
 
 
 ## Developer
-- Bagas “Nori” Nurdiansyah
+- Bagas **NORI** Nurdiansyah
+- Syahlevi **LEPPAI** Fazli Nugraha
+- Muhammad Akmal **MAMAL** AL GHIFARI
