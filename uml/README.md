@@ -1,6 +1,6 @@
 # Deskripsi
 
-## 👨‍🎓 User
+## 👨‍🎓 Mahasiswa/Pelajar User
 
 | No | Use Case | Deskripsi |
 |----|-----------|------------|
@@ -53,7 +53,7 @@
 
 | Aktor | Deskripsi |
 |--------|-----------|
-| **Mahasiswa (User)** | Menggunakan sistem untuk mencatat aktivitas belajar, melihat progress, dan mendapatkan rekomendasi belajar. |
+| **Mahasiswa/Pelajar (User)** | Menggunakan sistem untuk mencatat aktivitas belajar, melihat progress, dan mendapatkan rekomendasi belajar. |
 | **Admin** | Mengelola data mahasiswa, jadwal belajar, serta konfigurasi API eksternal. |
 | **Sistem (Otomatis)** | Menangani proses analisis, notifikasi, dan komunikasi dengan API eksternal. |
 | **Google Calendar API** | Pihak eksternal untuk sinkronisasi jadwal belajar. |
