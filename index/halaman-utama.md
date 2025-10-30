@@ -12,4 +12,13 @@ Leaderboard pengguna aplikasi agar kamu lebih semangat belajar
 Kami akan mencarikan mu waktu yang cocok supaya kamu bisa belajar teratur
 
 # How to use
-
+- #### Daftar/login
+Daftarkan diri kamu kalo belum daftar, kalo udah tinggal login ajah
+- #### Isi Profil kamu
+Isi profil kamu buat verif kalo kamuu ituu beneran mauu belajar
+- #### Buat catatan pertama kamu
+Buat catatan untuk setiap pelajaran yang udah kamu pelajari
+- #### Notif
+Kamu akan diberi Notif kalo kamu belum buat catatan hari ini
+- #### Nyalkan Api Streak dengan terus membuat catatan
+Ada leaderboard nya loh biar kamu semangat belajarnyaa
