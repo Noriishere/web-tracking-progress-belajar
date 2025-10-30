@@ -22,3 +22,9 @@ Buat catatan untuk setiap pelajaran yang udah kamu pelajari
 Kamu akan diberi Notif kalo kamu belum buat catatan hari ini
 - #### Nyalkan Api Streak dengan terus membuat catatan
 Ada leaderboard nya loh biar kamu semangat belajarnyaa
+
+
+# Dropdown
+- #### Contact us
+- #### About us
+- #### FAQ
