@@ -122,6 +122,11 @@ class UserModel {
         $this->db->bindValue('email', $email);
         $this->db->execute();
     }
+    public function getUserByEmail($email) {
+        $this->db->query("SELECT * FROM {$this->tbUser} WHERE email = :email");
+        $this->db->bindValue('email', $email);
+        return $this->db->single();
+    }
 
 
 }

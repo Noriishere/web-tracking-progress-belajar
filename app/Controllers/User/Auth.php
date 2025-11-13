@@ -28,19 +28,14 @@ class Auth extends Controller
         $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
         switch ($action) {
-            case 'register':
-                $this->register();
-                break;
-            case 'verify':
-                $this->verify();
-                break;
-            case 'checkUsername':
-                $this->checkUsername();
-                break;
-            default:
-                echo "404 - Action not found.";
+            case 'register': $this->register(); break;
+            case 'verify': $this->verify(); break;
+            case 'checkUsername': $this->checkUsername(); break;
+            case 'login': $this->login(); break;
+            default: echo "404 - Action not found.";
         }
     }
+
     public function login()
     {
         $email = $_POST['email'] ?? '';
@@ -51,7 +46,9 @@ class Auth extends Controller
             return;
         }
 
-        $user = $this->userModel->getUserByUsername($email);
+        // 🔥 FIX DI SINI: login berdasarkan email
+        $user = $this->userModel->getUserByEmail($email);
+
         if (!$user) {
             echo json_encode(['status' => 'error', 'message' => 'Akun tidak ditemukan!']);
             return;
@@ -76,7 +73,6 @@ class Auth extends Controller
             'username' => $_POST['username'] ?? '',
             'email' => $_POST['email'] ?? '',
             'password' => $_POST['password'] ?? '',
-            'nama' => $_POST['nama'] ?? ''
         ];
 
         if (empty($data['username']) || empty($data['email']) || empty($data['password'])) {
@@ -84,22 +80,20 @@ class Auth extends Controller
             return;
         }
 
-        // Insert user baru
         $result = $this->userModel->registerUser($data);
 
         if ($result === 'duplicate') {
             echo json_encode(['status' => 'error', 'message' => 'Email atau username sudah terdaftar.']);
             return;
         }
+
         if ($result > 0) {
-            // Generate token
             $token = md5(uniqid(rand(), true));
             $this->userModel->saveToken($data['email'], $token);
 
-            // Buat link verifikasi
-            $link = BASE_URL . "Auth.php?action=verify&token=" . $token;
+            // 🔥 FIX URL VERIFIKASI
+            $link = BASE_URL . "user/auth/handleRequest?action=verify&token=" . $token;
 
-            // Kirim email
             $mailSent = Mailer::sendVerification($data['email'], $data['username'], $link);
 
             if ($mailSent) {
@@ -107,8 +101,6 @@ class Auth extends Controller
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Gagal mengirim email verifikasi.']);
             }
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Email atau username sudah digunakan.']);
         }
     }
 

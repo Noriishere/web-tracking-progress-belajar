@@ -15,8 +15,8 @@ class Mailer
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-            $mail->Username   = 'emailkamu@gmail.com'; // Ganti!
-            $mail->Password   = 'password_app_email_kamu'; // Ganti pakai App Password!
+            $mail->Username   = 'if24.bagasnurdiansyah@mhs.ubpkarawang.ac.id'; // Ganti!
+            $mail->Password   = 'eyoe ufxz croe gsie'; // Ganti pakai App Password!
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = 587;
 

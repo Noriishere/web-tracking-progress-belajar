@@ -210,7 +210,14 @@
           confirmButtonColor: "#5465ff"
         }).then(() => {
           if (result.status === "success" && action === "register") {
-            setLoginForm();
+            Swal.fire({
+              icon: "success",
+              title: "Verifikasi Dikirim!",
+              text: "Silakan cek email kamu untuk menyelesaikan aktivasi akun.",
+              confirmButtonColor: "#5465ff"
+            }).then (()=>{
+              setLoginForm();
+            })
           }
           if (result.status === "success" && action === "login") {
             window.location.href = "/dashboard";
