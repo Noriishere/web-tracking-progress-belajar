@@ -1,4 +1,4 @@
-# web-tracking-progress-belajar
+# 1. MINE — My Intelligent Learning Environment
 
 ## Deskripsi Umum
 Web Tracking Progress Belajar adalah aplikasi berbasis web yang dirancang untuk membantu mahasiswa memantau konsistensi belajar, membagi waktu antar mata kuliah, dan mengevaluasi efektivitas jam belajar mereka.
