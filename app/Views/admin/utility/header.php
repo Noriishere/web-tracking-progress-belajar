@@ -13,7 +13,7 @@
     <div class="flex">
 
         <aside class="bg-white">
-            <div class="flex h-screen flex-col justify-between border-e border-gray-100 bg-white">
+            <div class="flex min-h-screen flex-col justify-between border-e border-gray-100 bg-white">
                 <div class="px-4 py-6">
                     <span class="grid h-10 w-32 place-content-center rounded-lg bg-gray-100 text-xs text-gray-600">
                         Dashboard admin
@@ -57,9 +57,17 @@
                                             User
                                         </a>
                                     </li>
+
+                                    <li>
+                                        <a href="<?= BASE_URL ?>admin/subject/index"
+                                            class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                                            Subject
+                                        </a>
+                                    </li>
                                 </ul>
                             </details>
                         </li>
+
                         <li>
                             <details class="group [&_summary::-webkit-details-marker]:hidden">
                                 <summary
@@ -78,22 +86,20 @@
 
                                 <ul class="mt-2 space-y-1 px-4">
                                     <li>
-                                        <a href="#"
-                                            class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                                        <a href="#" class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700">
                                             Details
                                         </a>
                                     </li>
 
                                     <li>
-                                        <a href="#"
-                                            class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                                        <a href="#" class="block rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700">
                                             Security
                                         </a>
                                     </li>
 
                                     <li>
-                                        <a href="#"
-                                            class="w-full rounded-lg px-4 py-2 [text-align:_inherit] text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700">
+                                        <a href="<?= BASE_URL ?>admin/logout/index"
+                                            class="w-full rounded-lg px-4 py-2 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700">
                                             Logout
                                         </a>
                                     </li>
@@ -106,10 +112,7 @@
                 <div class="sticky inset-x-0 bottom-0 border-t border-gray-100 overflow-hidden">
                     <a href="#" class="flex items-center gap-2 bg-white p-4 hover:bg-gray-50">
                         <img alt="" src="<?= BASE_URL ?>img/profile.jpg" class="size-10 rounded-full object-cover" />
-
-                        <div>
-                           <?= htmlspecialchars($data['user'] ?? 'Guest') ?>
-                        </div>
+                        <div><?= htmlspecialchars($_SESSION['admin']['nama_admin'] ?? 'Guest') ?></div>
                     </a>
                 </div>
             </div>

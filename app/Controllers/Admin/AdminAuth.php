@@ -16,6 +16,15 @@ class AdminAuth extends Controller {
         }
 
         if (isset($_SESSION['admin'])) {
+            $username = $_GET['username'];
+            $password = $_GET['password'];
+            $adminModel = new AdminModel();
+            $admin = $adminModel->getAdminByUsername($username);
+            $_SESSION['admin'] = [
+                    'id' => $admin['id'],
+                    'nama_admin' => $admin['nama_admin'],
+                    'username' => $admin['username']
+                ];
             header('Location: ' . BASE_URL . 'admin/dashboard');
             exit;
         }
@@ -42,15 +51,5 @@ class AdminAuth extends Controller {
 
         $data['judul'] = "Login Admin";
         $this->view('admin/auth/login', $data);
-    }
-
-    public function logout() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        unset($_SESSION['admin']);
-        session_destroy();
-        header('Location: ' . BASE_URL . 'admin/adminauth/login');
-        exit;
     }
 }

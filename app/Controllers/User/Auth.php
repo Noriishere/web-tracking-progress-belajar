@@ -1,4 +1,5 @@
 <?php
+
 namespace FpSmt3\WebTracker\Controllers\User;
 
 use FpSmt3\WebTracker\Core\Controller;
@@ -7,7 +8,7 @@ use FpSmt3\WebTracker\Core\Mailer;
 
 class Auth extends Controller
 {
-    private $userModel;     
+    private $userModel;
 
     public function __construct()
     {
@@ -19,6 +20,10 @@ class Auth extends Controller
 
     public function index()
     {
+        if (isset($_SESSION['user'])) {
+            header('Location: ' . BASE_URL . 'user/dashboard');
+            exit;
+        }
         $data['judul'] = "Login | Web Tracker";
         $this->view('user/auth/login', $data);
     }
@@ -28,44 +33,75 @@ class Auth extends Controller
         $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
         switch ($action) {
-            case 'register': $this->register(); break;
-            case 'verify': $this->verify(); break;
-            case 'checkUsername': $this->checkUsername(); break;
-            case 'login': $this->login(); break;
-            default: echo "404 - Action not found.";
+            case 'register':
+                $this->register();
+                break;
+            case 'verify':
+                $this->verify();
+                break;
+            case 'checkUsername':
+                $this->checkUsername();
+                break;
+            case 'login':
+                $this->login();
+                break;
+            default:
+                echo "404 - Action not found.";
         }
     }
 
     public function login()
     {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $data['judul'] = "Login | Web Tracker";
+            $this->view('user/auth/login', $data);
+            return;
+        }
+
+        ob_clean();
+        header('Content-Type: application/json');
+
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
 
         if (empty($email) || empty($password)) {
             echo json_encode(['status' => 'error', 'message' => 'Email dan password wajib diisi!']);
-            return;
+            exit;
         }
 
-        // 🔥 FIX DI SINI: login berdasarkan email
         $user = $this->userModel->getUserByEmail($email);
 
         if (!$user) {
             echo json_encode(['status' => 'error', 'message' => 'Akun tidak ditemukan!']);
-            return;
+            exit;
         }
 
         if ($user['verified'] !== 'verified') {
-            echo json_encode(['status' => 'error', 'message' => 'Akun belum diverifikasi. Silakan cek email.']);
-            return;
+            echo json_encode(['status' => 'error', 'message' => 'Akun belum diverifikasi.']);
+            exit;
         }
 
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['user'] = $user;
-            echo json_encode(['status' => 'success', 'message' => 'Login berhasil!']);
-        } else {
+        if (!password_verify($password, $user['password'])) {
             echo json_encode(['status' => 'error', 'message' => 'Password salah!']);
+            exit;
         }
+
+        $_SESSION['user'] = $user;
+
+        $profile = $this->userModel->hasProfile($user['id_user']);
+
+        $redirect = $profile
+            ? BASE_URL . "user/dashboard"
+            : BASE_URL . "user/profile/edit";
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Login berhasil!',
+            'redirect' => $redirect
+        ]);
+        exit;
     }
+
 
     private function register()
     {
@@ -122,7 +158,8 @@ class Auth extends Controller
         }
     }
 
-    public function checkUsername() {
+    public function checkUsername()
+    {
         $username = $_GET['username'] ?? '';
         if (empty($username)) {
             echo json_encode(['available' => false]);
@@ -131,5 +168,19 @@ class Auth extends Controller
 
         $exists = $this->userModel->getUserByUsername($username);
         echo json_encode(['available' => !$exists]);
+    }
+    public function save()
+    {
+        $id = $_SESSION['user']['id_user'];
+
+        $data = [
+            'firstname' => $_POST['firstname'],
+            'lastname' => $_POST['lastname'],
+            'birthday' => $_POST['birthday']
+        ];
+
+        $this->userModel->insertProfile($id, $data);
+
+        echo json_encode(['status' => 'success', 'message' => 'Profil berhasil dilengkapi!']);
     }
 }
