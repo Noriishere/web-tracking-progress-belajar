@@ -129,15 +129,14 @@ CREATE TABLE IF NOT EXISTS `study_video` (
 -- Dumping structure for table db_fp.subjects
 CREATE TABLE IF NOT EXISTS `subjects` (
   `id_subject` int unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` int unsigned DEFAULT NULL,
   `subject_name` varchar(100) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_subject`),
-  KEY `user_id` (`user_id`),
-  CONSTRAINT `subjects_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id_user`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id_subject`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table db_fp.subjects: ~0 rows (approximately)
+INSERT INTO `subjects` (`id_subject`, `subject_name`, `created_at`) VALUES
+	(1, 'Pemrograman Dasar', '2025-11-28 07:32:55');
 
 -- Dumping structure for table db_fp.user
 CREATE TABLE IF NOT EXISTS `user` (
@@ -250,9 +249,11 @@ CREATE TABLE IF NOT EXISTS `user_subjects` (
   KEY `subject_id` (`subject_id`),
   CONSTRAINT `user_subjects_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id_user`) ON DELETE CASCADE,
   CONSTRAINT `user_subjects_ibfk_2` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id_subject`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table db_fp.user_subjects: ~0 rows (approximately)
+INSERT INTO `user_subjects` (`id_user_subject`, `user_id`, `subject_id`) VALUES
+	(1, 4, 1);
 
 -- Dumping structure for table db_fp.user_tokens
 CREATE TABLE IF NOT EXISTS `user_tokens` (
@@ -289,14 +290,20 @@ INSERT INTO `user_verification` (`id`, `email`, `token`, `created_at`) VALUES
 CREATE TABLE IF NOT EXISTS `youtube_activity` (
   `id_activity` int unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned NOT NULL,
-  `video_id` varchar(50) DEFAULT NULL,
-  `title` varchar(255) DEFAULT NULL,
+  `subject_id` int unsigned NOT NULL,
+  `video_url` varchar(255) NOT NULL,
+  `video_title` varchar(255) DEFAULT NULL,
   `channel_title` varchar(255) DEFAULT NULL,
-  `watched_duration` int DEFAULT NULL,
-  `watched_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `duration_minutes` int DEFAULT '0',
+  `note_id` int unsigned DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_activity`),
   KEY `user_id` (`user_id`),
-  CONSTRAINT `youtube_activity_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id_user`) ON DELETE CASCADE
+  KEY `subject_id` (`subject_id`),
+  KEY `note_id` (`note_id`),
+  CONSTRAINT `youtube_activity_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id_user`) ON DELETE CASCADE,
+  CONSTRAINT `youtube_activity_ibfk_2` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`id_subject`) ON DELETE CASCADE,
+  CONSTRAINT `youtube_activity_ibfk_3` FOREIGN KEY (`note_id`) REFERENCES `user_notes` (`id_note`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Dumping data for table db_fp.youtube_activity: ~0 rows (approximately)
