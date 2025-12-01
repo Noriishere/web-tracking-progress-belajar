@@ -22,6 +22,20 @@ class StudyRecommendationModel
 
     public function saveRecommendation($userId, $bestHour, $productiveDay)
     {
+        $map = [
+            'Monday' => 'Senin',
+            'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu',
+            'Thursday' => 'Kamis',
+            'Friday' => 'Jumat',
+            'Saturday' => 'Sabtu',
+            'Sunday' => 'Minggu'
+        ];
+
+        if (isset($map[$productiveDay])) {
+            $productiveDay = $map[$productiveDay];
+        }
+
         $exists = $this->getByUser($userId);
 
         if ($exists) {

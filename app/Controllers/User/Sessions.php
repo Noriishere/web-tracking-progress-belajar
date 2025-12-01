@@ -48,17 +48,16 @@ class Sessions extends Controller
     {
         $userId = $_SESSION['user']['id_user'];
 
-        $subjectModel = new UserSubjectModel();
-        $notesModel   = new UserNotesModel();
-
         $data['judul'] = "Belajar dari YouTube";
-        $data['subjects'] = $subjectModel->getSubjectsByUser($userId);
-        $data['notes'] = $notesModel->getAllNotes($userId);
+        $data['subjects'] = $this->subjectModel->getSubjectsByUser($userId);
+        $data['userSubjects'] = $data['subjects'];
+        $data['notes'] = $this->notesModel->getAllNotes($userId);
 
         $this->view("user/utility/header", $data);
         $this->view("user/sessions/youtube", $data);
         $this->view("user/utility/footer", $data);
     }
+
 
 
     public function store()

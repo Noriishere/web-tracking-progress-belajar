@@ -6,12 +6,14 @@
 
         <select id="subjectSelect" class="border p-2 rounded w-full">
             <option value="">Pilih Mata Kuliah</option>
-            <?php foreach ($subjects as $sub): ?>
-                <option value="<?= $sub['subject_name'] ?>"><?= $sub['subject_name'] ?></option>
+            <?php foreach ($subjects as $s): ?>
+                <option value="<?= htmlspecialchars($s['subject_name']) ?>">
+                    <?= $s['subject_name'] ?>
+                </option>
             <?php endforeach; ?>
         </select>
 
-        <button id="searchBtn" class="px-4 py-2 bg-red-600 text-white rounded w-full">
+        <button id="searchBtn" disabled class="px-4 py-2 bg-red-600 text-white rounded w-full opacity-50">
             Cari Video
         </button>
 
@@ -20,28 +22,37 @@
         <div id="playerContainer" class="hidden mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 
             <div>
+
+                <button id="backBtn" class="px-3 py-1 bg-gray-200 rounded text-sm hover:bg-gray-300 mb-3">
+                    ← Kembali
+                </button>
+
                 <iframe id="youtubePlayer" class="w-full h-72 rounded-xl"></iframe>
 
                 <form action="<?= BASE_URL ?>user/sessions/storeYoutube" method="POST" class="space-y-3 mt-4">
-                    <input type="hidden" name="video_url" id="video_url">
-                    <input type="hidden" name="video_title" id="video_title">
-                    <input type="hidden" name="note_final_id" id="note_final_id">
 
-                    <select name="subject_id" class="border p-2 rounded w-full" required>
-                        <option value="">Pilih Subject</option>
-                        <?php foreach ($userSubjects as $s): ?>
-                            <option value="<?= $s['id_subject'] ?>"><?= $s['subject_name'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input type="hidden" id="video_url" name="video_url">
+                    <input type="hidden" id="video_title" name="video_title">
+                    <input type="hidden" id="note_final_id" name="note_final_id">
+                    <input type="hidden" id="detected_duration" name="detected_duration">
+                    <input type="hidden" id="subject_id_hidden" name="subject_id">
 
-                    <input type="number" name="duration" min="1" placeholder="Durasi Belajar (menit)" class="border p-2 rounded w-full">
+                    <p class="text-sm text-gray-700">
+                        Mata Kuliah: <span id="subjectLabel" class="font-semibold"></span>
+                    </p>
 
-                    <button class="px-4 py-2 bg-blue-600 text-white rounded w-full">Simpan Aktivitas</button>
+                    <input type="number" name="duration" id="durationInput" min="1"
+                        placeholder="Durasi Belajar (menit)" class="border p-2 rounded w-full">
+
+                    <p id="autoDurationText" class="text-sm text-green-700"></p>
+
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded w-full">
+                        Simpan Aktivitas
+                    </button>
                 </form>
             </div>
 
             <div class="bg-white p-4 rounded-xl border shadow space-y-3">
-
                 <h2 class="font-bold text-lg">Catatan Belajar</h2>
 
                 <select id="noteSelect" class="border p-2 rounded w-full">
@@ -60,102 +71,125 @@
     </div>
 </div>
 
+
 <script>
-    const apiKey = "AIzaSyAvRWPInXCpMITLfqboSJs8x3mhmfC_6bc";
+    document.addEventListener("DOMContentLoaded", () => {
 
-    const ytSubject = document.getElementById("subjectSelect");
-    const searchBtn = document.getElementById("searchBtn");
+        const apiKey = "AIzaSyAvRWPInXCpMITLfqboSJs8x3mhmfC_6bc";
 
-    ytSubject.addEventListener("change", () => {
-        if (ytSubject.value === "") {
-            searchBtn.disabled = true;
-            searchBtn.classList.add("opacity-50", "cursor-not-allowed");
-        } else {
-            searchBtn.disabled = false;
-            searchBtn.classList.remove("opacity-50", "cursor-not-allowed");
-        }
-    });
+        const ytSubject = document.getElementById("subjectSelect");
+        const searchBtn = document.getElementById("searchBtn");
+        const results = document.getElementById("results");
+        const playerContainer = document.getElementById("playerContainer");
+        const youtubePlayer = document.getElementById("youtubePlayer");
+        const subjectLabel = document.getElementById("subjectLabel");
+        const subjectHidden = document.getElementById("subject_id_hidden");
 
-    searchBtn.onclick = async () => {
-        const subject = subjectSelect.value;
-        if (!subject) return;
+        const notesData = <?= json_encode($notes) ?>;
+        const subjectData = <?= json_encode($userSubjects ?? []) ?>;
 
-        const q = subject + " tutorial";
-
-        const res = await fetch(
-            "https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=6&q=" +
-            encodeURIComponent(q) +
-            "&key=" + apiKey
-        );
-
-        const data = await res.json();
-        const items = data.items;
-        results.innerHTML = "";
-
-        items.forEach(v => {
-            const id = v.id.videoId;
-            const title = v.snippet.title;
-            const thumb = v.snippet.thumbnails.medium.url;
-
-            results.innerHTML += `
-            <div class='border rounded-xl shadow p-3 cursor-pointer hover:bg-gray-100'
-                 onclick="selectVideo('${id}', '${title.replace(/'/g, "\\'")}')">
-                <img src='${thumb}' class='rounded mb-2'>
-                <p class='font-medium text-sm'>${title}</p>
-            </div>
-        `;
+        ytSubject.addEventListener("change", () => {
+            if (ytSubject.value.trim() === "") {
+                searchBtn.setAttribute("disabled", true);
+                searchBtn.classList.add("opacity-50");
+            } else {
+                searchBtn.removeAttribute("disabled");
+                searchBtn.classList.remove("opacity-50");
+            }
         });
-    };
 
-    function selectVideo(id, title) {
-        youtubePlayer.src = "https://www.youtube.com/embed/" + id;
-        video_url.value = "https://www.youtube.com/watch?v=" + id;
-        video_title.value = title;
-        playerContainer.classList.remove("hidden");
-    }
+        searchBtn.onclick = async () => {
+            const subject = ytSubject.value.trim();
+            if (!subject) return;
 
-    const notesData = <?= json_encode($notes) ?>;
-    let selectedNote = null;
-    let typingTimer = null;
+            const q = subject + " tutorial";
 
-    noteSelect.onchange = () => {
-        const noteId = noteSelect.value;
-        selectedNote = noteId === "" ? null : noteId;
+            const res = await fetch(
+                "https://www.googleapis.com/youtube/v3/search" +
+                "?part=snippet&type=video&maxResults=12&q=" + encodeURIComponent(q) +
+                "&key=" + apiKey
+            );
 
-        if (selectedNote) {
-            const found = notesData.find(x => x.id_note == selectedNote);
-            noteEditor.value = found ? found.content : "";
-            note_final_id.value = selectedNote;
-        } else {
-            noteEditor.value = "";
-            note_final_id.value = "";
-        }
-    };
+            const data = await res.json();
+            results.innerHTML = "";
 
-    noteEditor.addEventListener("input", () => {
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(saveNote, 1200);
-    });
+            if (!data.items) return;
 
-    function saveNote() {
-        const text = noteEditor.value.trim();
-        if (text === "") return;
+            data.items.forEach(v => {
+                const id = v.id.videoId;
+                const title = v.snippet.title;
+                const thumb = v.snippet.thumbnails.medium.url;
 
-        const fd = new FormData();
-        fd.append("content", text);
-        fd.append("note_id", selectedNote);
-
-        fetch("<?= BASE_URL ?>user/notes/autosave", {
-                method: "POST",
-                body: fd
-            })
-            .then(r => r.json())
-            .then(res => {
-                if (res.status === "new") {
-                    selectedNote = res.id;
-                    note_final_id.value = res.id;
-                    noteSelect.innerHTML += `<option value="${res.id}">${text.substring(0,30)}...</option>`;
-                }
+                results.innerHTML += `
+                <div class="border rounded-xl shadow p-3 cursor-pointer hover:bg-gray-100"
+                    data-id="${id}"
+                    data-title="${title.replace(/"/g, "&quot;")}"
+                    onclick="selectVideo(this)">
+                    <img src="${thumb}" class="rounded mb-2">
+                    <p class="font-medium text-sm">${title}</p>
+                </div>`;
             });
-    }
+        };
+
+        window.selectVideo = async (el) => {
+            const id = el.dataset.id;
+            const title = el.dataset.title;
+
+            youtubePlayer.src = "https://www.youtube.com/embed/" + id;
+
+            document.getElementById("video_url").value =
+                "https://www.youtube.com/watch?v=" + id;
+
+            document.getElementById("video_title").value = title;
+
+            const selectedSubject = ytSubject.value.trim();
+            const match = subjectData.find(x => x.subject_name === selectedSubject);
+
+            if (match) {
+                subjectHidden.value = match.id_subject;
+                subjectLabel.textContent = match.subject_name;
+            }
+
+            playerContainer.classList.remove("hidden");
+
+            await detectVideoDuration(id);
+
+            window.scrollTo({
+                top: playerContainer.offsetTop - 20,
+                behavior: "smooth"
+            });
+        };
+
+
+        async function detectVideoDuration(videoId) {
+            const res = await fetch(
+                "https://www.googleapis.com/youtube/v3/videos" +
+                "?part=contentDetails&id=" + videoId +
+                "&key=" + apiKey
+            );
+
+            const data = await res.json();
+            if (!data.items) return;
+
+            const iso = data.items[0].contentDetails.duration;
+            const minutes = isoToMinutes(iso);
+
+            document.getElementById("detected_duration").value = minutes;
+            document.getElementById("autoDurationText").textContent =
+                "Durasi terdeteksi: " + minutes + " menit";
+        }
+
+        function isoToMinutes(iso) {
+            const h = iso.match(/(\d+)H/);
+            const m = iso.match(/(\d+)M/);
+            const s = iso.match(/(\d+)S/);
+
+            return Math.round(
+                (h ? +h[1] : 0) * 60 +
+                (m ? +m[1] : 0) +
+                (s ? +s[1] / 60 : 0)
+            );
+        }
+
+    });
 </script>
