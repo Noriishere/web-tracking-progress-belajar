@@ -95,11 +95,34 @@ class Sessions extends Controller
         $subjectId = $_POST['subject_id'];
         $url       = $_POST['video_url'];
         $title     = $_POST['video_title'];
-        $duration  = $_POST['duration'];
-        $noteId    = $_POST['note_id'] ?? null;
+        $duration  = (int)$_POST['duration'];
+        $noteId    = $_POST['note_final_id'] ?? null;
+
+        if ($noteId === "" || $noteId === "0") {
+            $noteId = null;
+        }
 
         $yt = new YoutubeActivityModel();
         $yt->addActivity($userId, $subjectId, $url, $title, $duration, $noteId);
+
+        $start = date("Y-m-d H:i:s");
+        $end   = date("Y-m-d H:i:s", strtotime("+{$duration} minutes"));
+
+        $activityModel = new StudyActivityModel();
+        $activity      = $activityModel->getByName("YouTube Study");
+        $activityId    = $activity['id_activity'];
+
+        $sessionModel = new StudySessionModel();
+        $sessionModel->addSession(
+            $userId,
+            $subjectId,
+            $activityId,
+            $start,
+            $end,
+            $duration,
+            "medium",
+            $noteId
+        );
 
         header("Location: " . BASE_URL . "user/dashboard");
         exit;
