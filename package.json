@@ -1,0 +1,26 @@
+{
+  "name": "composer-template",
+  "version": "1.0.0",
+  "description": "Web Tracking Progress Belajar adalah aplikasi berbasis web yang dirancang untuk membantu mahasiswa memantau konsistensi belajar, membagi waktu antar mata kuliah, dan mengevaluasi efektivitas jam belajar mereka.\r Aplikasi ini dibangun menggunakan arsitektur MVC (PHP Native) dengan integrasi Google Calendar API dan YouTube API untuk mengukur jam belajar secara otomatis dan terstruktur.\r Fitur visualisasi progres, notifikasi pengingat, serta analitik kebiasaan belajar membantu pengguna menjaga disiplin, meningkatkan produktivitas, dan memahami pola belajar mereka secara mendalam.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tailwindcss -i ./public/css/input.css -o ./public/css/output.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Noriishere/web-tracking-progress-belajar.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Noriishere/web-tracking-progress-belajar/issues"
+  },
+  "homepage": "https://github.com/Noriishere/web-tracking-progress-belajar#readme",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.17",
+    "tailwindcss": "^4.1.17"
+  }
+}

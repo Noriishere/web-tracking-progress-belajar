@@ -1,19 +1,34 @@
+<?php
+$judul = $judul ?? "Dashboard";
+?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $judul ?></title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <title><?= htmlspecialchars($judul) ?></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="<?= BASE_URL ?>css/output.css" rel="stylesheet">
+  <link rel="stylesheet" href="<?= BASE_URL ?>css/layout.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="<?= BASE_URL ?>js/flowbite.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="icon" type="image/x-icon" href="<?= BASE_URL ?>favicon.ico">
+  <script>
+    (function() {
+      const theme = localStorage.getItem('theme');
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
 </head>
-<body class="bg-gray-100">
-<nav class="bg-white shadow px-6 py-4 flex justify-between items-center">
-    <div class="text-xl font-bold text-indigo-600">LearnTrack</div>
-    <div class="flex gap-6">
-        <a href="<?= BASE_URL ?>dashboard" class="text-gray-700 hover:text-indigo-600">Dashboard</a>
-        <a href="<?= BASE_URL ?>notes" class="text-gray-700 hover:text-indigo-600">Catatan</a>
-        <a href="<?= BASE_URL ?>logout" class="text-gray-700 hover:text-red-600">Logout</a>
-    </div>
-</nav>
-<div class="max-w-7xl mx-auto p-6">
+
+
+<body class="transition-colors duration-300 dark:bg-background-dark ease-in-out">
+
+  <?php require __DIR__ . '/sidebar.php'; ?>
+  <?php require __DIR__ . '/navbar.php'; ?>
+
+  <main class="layout-main p-6 dark:bg-background-dark">

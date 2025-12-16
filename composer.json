@@ -10,6 +10,9 @@
     },
     "minimum-stability": "dev",
     "require": {
-        "phpmailer/phpmailer": "dev-master"
+        "phpmailer/phpmailer": "dev-master",
+        "vlucas/phpdotenv": "5.5",
+        "minishlink/web-push": "dev-master",
+        "dompdf/dompdf": "dev-master"
     }
 }

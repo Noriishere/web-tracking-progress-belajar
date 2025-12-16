@@ -11,11 +11,11 @@ class Logout extends Controller
             session_start();
         }
         if (!isset($_SESSION['user'])) {
-            header('Location: ' . BASE_URL . 'auth/login');
+            header('Location: ' . BASE_URL . 'user/auth/login');
             exit;
         }
         session_destroy();
-        header('Location: ' . BASE_URL . 'auth/login');
+        header('Location: ' . BASE_URL . 'user/auth/login');
         exit;
     }
 }

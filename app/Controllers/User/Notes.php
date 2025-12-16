@@ -1,4 +1,5 @@
 <?php
+
 namespace FpSmt3\WebTracker\Controllers\User;
 
 use FpSmt3\WebTracker\Core\Controller;
@@ -7,15 +8,21 @@ use FpSmt3\WebTracker\Models\UserStreakModel;
 
 class Notes extends Controller
 {
-    public function index()
+    private function auth()
     {
         if (!isset($_SESSION['user'])) {
-            header('Location: ' . BASE_URL . 'auth/login');
+            header('Location: ' . BASE_URL . 'user/auth/login');
             exit;
         }
+    }
+
+    public function index()
+    {
+        $this->auth();
 
         $userId = $_SESSION['user']['id_user'];
         $model = new UserNotesModel();
+
         $data['judul'] = 'Catatan Saya';
         $data['notes'] = $model->getAllNotes($userId);
 
@@ -26,10 +33,7 @@ class Notes extends Controller
 
     public function add()
     {
-        if (!isset($_SESSION['user'])) {
-            header('Location: ' . BASE_URL . 'auth/login');
-            exit;
-        }
+        $this->auth();
 
         $data['judul'] = 'Tambah Catatan';
         $this->view('user/utility/header', $data);
@@ -39,17 +43,18 @@ class Notes extends Controller
 
     public function store()
     {
-        if (!isset($_SESSION['user'])) {
-            header('Location: ' . BASE_URL . 'auth/login');
+        $this->auth();
+
+        $userId  = $_SESSION['user']['id_user'];
+        $content = $_POST['content'] ?? '';
+
+        if (str_word_count(strip_tags($content)) < 10) {
+            http_response_code(400);
             exit;
         }
 
-        $userId = $_SESSION['user']['id_user'];
-        $content = $_POST['content'];
-        $wordCount = str_word_count($content);
-
         $model = new UserNotesModel();
-        $model->addNote($userId, $content, $wordCount);
+        $model->addNote($userId, $content);
 
         $streak = new UserStreakModel();
         $streak->updateStreak($userId);
@@ -60,14 +65,12 @@ class Notes extends Controller
 
     public function detail($id)
     {
-        if (!isset($_SESSION['user'])) {
-            header('Location: ' . BASE_URL . 'auth/login');
-            exit;
-        }
+        $this->auth();
 
         $model = new UserNotesModel();
+
         $data['judul'] = 'Detail Catatan';
-        $data['note'] = $model->getNoteById($id);
+        $data['note']  = $model->getNoteById($id);
 
         $this->view('user/utility/header', $data);
         $this->view('user/notes/detail', $data);
@@ -76,30 +79,46 @@ class Notes extends Controller
 
     public function delete($id)
     {
+        $this->auth();
+
         $model = new UserNotesModel();
         $model->deleteNote($id);
-        header('Location: ' . BASE_URL . 'notes');
+
+        header('Location: ' . BASE_URL . 'user/notes');
         exit;
     }
 
-    public function autosave()
+    public function create()
     {
-        $userId = $_SESSION['user']['id_user'];
-        $content = $_POST['content'];
-        $noteId = $_POST['note_id'] ?? null;
+        $this->auth();
+
+        $userId    = $_SESSION['user']['id_user'];
+        $content   = $_POST['content'] ?? '';
+        $subjectId = $_POST['subject_id'] ?? null;
 
         $model = new UserNotesModel();
+        $id = $model->addNote($userId, $content, $subjectId);
 
-        if ($noteId) {
-            $model->updateNoteContent($noteId, $content);
-            echo json_encode(["status" => "updated"]);
+        echo json_encode(['id' => $id]);
+        exit;
+    }
+
+    public function save()
+    {
+        $this->auth();
+
+        $noteId  = (int) ($_POST['note_id'] ?? 0);
+        $content = $_POST['content'] ?? '';
+
+        if (!$noteId) {
+            http_response_code(400);
             exit;
         }
 
-        $wordCount = str_word_count($content);
-        $newId = $model->addNote($userId, $content, $wordCount);
+        $model = new UserNotesModel();
+        $model->updateNoteContent($noteId, $content);
 
-        echo json_encode(["status" => "new", "id" => $newId]);
+        echo json_encode(['status' => 'saved']);
         exit;
     }
 }

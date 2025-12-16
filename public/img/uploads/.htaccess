@@ -1,0 +1,5 @@
+RemoveHandler .php .php5 .php7 .phtml
+RemoveType .php .php5 .php7 .phtml
+<FilesMatch "\.(php|php5|php7|phtml)$">
+    Deny from all
+</FilesMatch>

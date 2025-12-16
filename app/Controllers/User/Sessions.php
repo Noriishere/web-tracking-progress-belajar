@@ -8,123 +8,201 @@ use FpSmt3\WebTracker\Models\UserSubjectModel;
 use FpSmt3\WebTracker\Models\UserNotesModel;
 use FpSmt3\WebTracker\Models\StudyActivityModel;
 use FpSmt3\WebTracker\Models\YoutubeActivityModel;
+use FpSmt3\WebTracker\Models\SubjectModel;
+use FpSmt3\WebTracker\Models\UserStreakModel;
 
 class Sessions extends Controller
 {
-    private $model;
-    private $subjectModel;
-    private $notesModel;
-    private $activityModel;
+    private StudySessionModel $sessionModel;
+    private UserSubjectModel $userSubjectModel;
+    private UserNotesModel $notesModel;
+    private StudyActivityModel $activityModel;
+    private SubjectModel $subjectModel;
+    private UserStreakModel $streakModel;
+    private YoutubeActivityModel $youtubeModel;
+
+    private string $viewHeader = 'user/utility/header';
+    private string $viewFooter = 'user/utility/footer';
+    private string $viewStudy = 'user/sessions/study';
+    private string $viewYoutube = 'user/sessions/youtube';
 
     public function __construct()
     {
-        if (session_status() === PHP_SESSION_NONE) session_start();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         if (!isset($_SESSION['user'])) {
-            header("Location: " . BASE_URL . "auth/login");
+            header("Location: " . BASE_URL . "user/auth/login");
             exit;
         }
 
-        $this->model = new StudySessionModel();
-        $this->subjectModel = new UserSubjectModel();
-        $this->notesModel = new UserNotesModel();
-        $this->activityModel = new StudyActivityModel();
+        $this->sessionModel     = new StudySessionModel();
+        $this->userSubjectModel = new UserSubjectModel();
+        $this->notesModel       = new UserNotesModel();
+        $this->activityModel    = new StudyActivityModel();
+        $this->subjectModel     = new SubjectModel();
+        $this->streakModel      = new UserStreakModel();
+        $this->youtubeModel     = new YoutubeActivityModel();
     }
 
     public function study()
     {
         $userId = $_SESSION['user']['id_user'];
 
-        $data["judul"] = "Mulai Belajar";
-        $data["subjects"] = $this->subjectModel->getSubjectsByUser($userId);
-        $data["notes"] = $this->notesModel->getAllNotes($userId);
-        $data["activities"] = $this->activityModel->getAll();
+        $data = [
+            'judul'      => 'Mulai Belajar',
+            'subjects'   => $this->userSubjectModel->getSubjectsByUser($userId),
+            'notes'      => $this->notesModel->getAllNotes($userId),
+            'activities' => $this->activityModel->getAll()
+        ];
 
-        $this->view("user/utility/header", $data);
-        $this->view("user/sessions/study", $data);
-        $this->view("user/utility/footer", $data);
+        $this->view($this->viewHeader, $data);
+        $this->view($this->viewStudy, $data);
+        $this->view($this->viewFooter, $data);
     }
 
     public function youtube()
     {
         $userId = $_SESSION['user']['id_user'];
 
-        $data['judul'] = "Belajar dari YouTube";
-        $data['subjects'] = $this->subjectModel->getSubjectsByUser($userId);
-        $data['userSubjects'] = $data['subjects'];
-        $data['notes'] = $this->notesModel->getAllNotes($userId);
+        $data = [
+            'judul'       => 'Belajar dari YouTube',
+            'subjects'    => $this->userSubjectModel->getSubjectsByUser($userId),
+            'notes'       => $this->notesModel->getAllNotes($userId),
+            'subjectMeta' => $this->subjectModel->getAll()
+        ];
 
-        $this->view("user/utility/header", $data);
-        $this->view("user/sessions/youtube", $data);
-        $this->view("user/utility/footer", $data);
+        $this->view($this->viewHeader, $data);
+        $this->view($this->viewYoutube, $data);
+        $this->view($this->viewFooter, $data);
     }
 
-
-
-    public function store()
+    public function storeYoutube()
     {
-        $userId = $_SESSION['user']['id_user'];
-        $subjectId = $_POST['subject_id'] ?? null;
-        if (!$subjectId || $subjectId === "") {
-            die("Subject wajib dipilih.");
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['status' => 'error', 'message' => 'Method not allowed']);
+            return;
         }
 
-        $activityId = $_POST['activity_id'] ?? null;
-        $startTime = $_POST['start_time'] ?? date('Y-m-d H:i:s');
-        $endTime = $_POST['end_time'] ?? date('Y-m-d H:i:s');
-        $duration = isset($_POST['duration']) ? (int)$_POST['duration'] : 0;
-        $productivity = $_POST['productivity'] ?? 'medium';
-        $noteId = $_POST['note_id'] ?? null;
+        $userId     = $_SESSION['user']['id_user'];
+        $videoUrl   = $_POST['video_url'] ?? '';
+        $videoTitle = $_POST['video_title'] ?? '';
+        $duration   = (int) ($_POST['duration'] ?? 0);
+        $noteId     = $_POST['note_id'] ?? null;
+        $subjectId  = $_POST['subject_id'] ?? null;
 
-        $this->model->addSession(
+        if (!$videoUrl || !$subjectId || !$noteId || $duration <= 0) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => 'Data tidak lengkap']);
+            return;
+        }
+
+        $note = $this->notesModel->getNoteById($noteId);
+
+        if (!$note || str_word_count(strip_tags($note['content'])) < 10) {
+            http_response_code(400);
+            echo json_encode(['status' => 'error', 'message' => 'Catatan tidak valid']);
+            return;
+        }
+
+        $this->youtubeModel->addActivityOnly(
             $userId,
             $subjectId,
-            $activityId,
-            $startTime,
-            $endTime,
+            $videoUrl,
+            $videoTitle,
             $duration,
-            $productivity,
             $noteId
         );
 
-        header("Location: " . BASE_URL . "user/dashboard");
-        exit;
-    }
-    public function storeYoutube()
-    {
-        $userId    = $_SESSION['user']['id_user'];
-        $subjectId = $_POST['subject_id'];
-        $url       = $_POST['video_url'];
-        $title     = $_POST['video_title'];
-        $duration  = (int)$_POST['duration'];
-        $noteId    = $_POST['note_final_id'] ?? null;
+        $end   = date('Y-m-d H:i:s');
+        $start = date('Y-m-d H:i:s', strtotime("-{$duration} minutes"));
 
-        if ($noteId === "" || $noteId === "0") {
-            $noteId = null;
+        if (!$this->sessionModel->hasSessionToday($userId)) {
+            $this->sessionModel->addSession(
+                $userId,
+                $subjectId,
+                2, // activity_id youtube
+                $start,
+                $end,
+                $duration,
+                'medium'
+            );
+
+            $this->streakModel->updateStreak($userId);
         }
 
-        $yt = new YoutubeActivityModel();
-        $yt->addActivity($userId, $subjectId, $url, $title, $duration, $noteId);
+        $this->streakModel->updateStreak($userId);
 
-        $start = date("Y-m-d H:i:s");
-        $end   = date("Y-m-d H:i:s", strtotime("+{$duration} minutes"));
+        echo json_encode(['status' => 'ok']);
+    }
 
-        $activityModel = new StudyActivityModel();
-        $activity      = $activityModel->getByName("YouTube Study");
-        $activityId    = $activity['id_activity'];
+    public function getPlaylistVideos()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            exit;
+        }
 
-        $sessionModel = new StudySessionModel();
-        $sessionModel->addSession(
+        $playlistId = $_POST['playlist_id'] ?? null;
+
+        if (!$playlistId) {
+            http_response_code(400);
+            echo json_encode(['error' => 'playlist_id missing']);
+            exit;
+        }
+
+        $url = "https://www.googleapis.com/youtube/v3/playlistItems"
+            . "?part=snippet,contentDetails"
+            . "&maxResults=50"
+            . "&playlistId={$playlistId}"
+            . "&key=" . YOUTUBE_API_KEY;
+
+        header("Content-Type: application/json");
+        echo file_get_contents($url);
+        exit;
+    }
+    public function store()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASE_URL . 'user/sessions/study');
+            return;
+        }
+
+        $userId   = $_SESSION['user']['id_user'];
+
+        $subject  = $_POST['subject_id'] ?? null;
+        $activity = $_POST['activity_id'] ?? null;
+        $start    = $_POST['start_time'] ?? null;
+        $end      = $_POST['end_time'] ?? null;
+        $duration = $_POST['duration_minutes'] ?? 0;
+        $level    = $_POST['productivity_level'] ?? 'medium';
+
+        if (!$subject || !$activity || !$start || !$end || $duration <= 0) {
+            header('Location: ' . BASE_URL . 'user/sessions/study');
+            return;
+        }
+
+        if ($this->sessionModel->hasSessionToday($userId)) {
+            header('Location: ' . BASE_URL . 'user/dashboard');
+            return;
+        }
+
+        $this->sessionModel->addSession(
             $userId,
-            $subjectId,
-            $activityId,
+            $subject,
+            $activity,
             $start,
             $end,
             $duration,
-            "medium",
-            $noteId
+            $level
         );
 
-        header("Location: " . BASE_URL . "user/dashboard");
-        exit;
+        $this->streakModel->updateStreak($userId);
+
+        header('Location: ' . BASE_URL . 'user/dashboard');
     }
 }

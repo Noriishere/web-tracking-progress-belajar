@@ -1,0 +1,138 @@
+/* ROOT & GLOBAL */
+/* =========================================
+   DARK MODE GLOBAL (PERSISTENT)
+========================================= */
+:root {
+  --sidebar-width: 5rem; 
+  --navbar-height: 4rem;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* LAYOUT */
+.layout-main {
+  padding-left: calc(var(--sidebar-width) + 1.25rem);
+  padding-top: calc(var(--navbar-height) + 1.5rem);
+}
+
+.navbar-offset {
+  width: calc(100% - var(--sidebar-width));
+}
+
+.sidebar-width {
+  width: var(--sidebar-width);
+}
+
+/* MOBILE OVERLAY BACKGROUND */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.no-transition * {
+  transition: none !important;
+    transition-property: none !important;
+  transition-duration: 0s !important;
+  animation: none !important;
+}
+
+/* ✅ FIX BACKGROUND DATEPICKER (LIGHT MODE) */
+.datepicker,
+.datepicker-dropdown {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* ✅ FIX BACKGROUND DATEPICKER (DARK MODE) */
+html.dark .datepicker,
+html.dark .datepicker-dropdown {
+  background-color: #020617 !important;
+  border: 1px solid #1e293b !important;
+  color: #e5e7eb !important;
+}
+
+
+/* MOBILE MENU */
+@media (max-width: 1279px) {
+  .layout-main {
+    padding-left: 1.25rem !important;
+  }
+
+  .navbar-offset {
+    left: 0 !important;
+    width: 100% !important;
+  }
+
+  #sidebar {
+    width: 15rem !important;
+    transform: translateX(-100%);
+    align-items: flex-start !important;
+    padding-left: 0 !important;
+    transition: transform 0.3s ease;
+  }
+
+  #sidebar.active {
+    transform: translateX(0);
+  }
+
+  #sidebar .menu-item,
+  #sidebar .logo-wrapper,
+  #sidebar .menu-title {
+    justify-content: flex-start !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    gap: 0.75rem !important;
+  }
+
+  #sidebar .pill-item {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    margin: 0 !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .sidebar-text {
+    display: inline !important;
+  }
+}
+
+/* DESKTOP SIDEBAR MODE */
+@media (min-width: 1280px) {
+
+  :root[style*="--sidebar-width: 5rem"] #sidebar .menu-item {
+    justify-content: center !important;
+    padding-left: 0 !important;
+    gap: 0 !important;
+  }
+
+  :root[style*="--sidebar-width: 5rem"] #sidebar .pill-item {
+    justify-content: center !important;
+  }
+
+  :root[style*="--sidebar-width: 15rem"] #sidebar .menu-item,
+  :root[style*="--sidebar-width: 15rem"] #sidebar .logo-wrapper,
+  :root[style*="--sidebar-width: 15rem"] #sidebar .menu-title {
+    justify-content: flex-start !important;
+    padding-left: 2rem !important;
+    gap: 0.75rem !important;
+  }
+
+  :root[style*="--sidebar-width: 15rem"] #sidebar .pill-item {
+    width: 12rem;
+    margin: 0;
+    justify-content: flex-start;
+  }
+}

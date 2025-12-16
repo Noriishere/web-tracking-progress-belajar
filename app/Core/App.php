@@ -3,16 +3,20 @@
 namespace FpSmt3\WebTracker\Core;
 
 class App {
-    protected $folder = 'User';
-    protected $controller = 'Auth';
+    protected $folder = '';
+    protected $controller = 'Home';
     protected $method = 'index';
     protected $params = [];
 
     public function __construct() {
         $url = $this->parseUrl();
 
-        if (!empty($url[0]) && in_array(strtolower($url[0]), ['admin', 'user'])) {
-            $this->folder = ucfirst(strtolower($url[0]));
+        if (!empty($url[0]) && strtolower($url[0]) === 'admin') {
+            $this->folder = 'Admin';
+            unset($url[0]);
+            $url = array_values($url);
+        } elseif (!empty($url[0]) && strtolower($url[0]) === 'user') {
+            $this->folder = 'User';
             unset($url[0]);
             $url = array_values($url);
         }
@@ -27,17 +31,25 @@ class App {
             unset($url[1]);
         }
 
-        $controllerClass = "FpSmt3\\WebTracker\\Controllers\\{$this->folder}\\{$this->controller}";
+        $controllerClass = $this->folder
+            ? "FpSmt3\\WebTracker\\Controllers\\{$this->folder}\\{$this->controller}"
+            : "FpSmt3\\WebTracker\\Controllers\\{$this->controller}";
 
         if (!class_exists($controllerClass)) {
-            $controllerClass = "FpSmt3\\WebTracker\\Controllers\\User\\Auth";
-            $this->controller = new $controllerClass;
-            call_user_func_array([$this->controller, $this->method], []);
-            return;
+            http_response_code(404);
+            echo "Controller not found";
+            exit;
         }
 
         $this->controller = new $controllerClass;
         $this->params = $url ? array_values($url) : [];
+
+        if (!method_exists($this->controller, $this->method)) {
+            http_response_code(404);
+            echo "Method not found";
+            exit;
+        }
+
         call_user_func_array([$this->controller, $this->method], $this->params);
     }
 

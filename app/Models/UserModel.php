@@ -111,12 +111,18 @@ class UserModel
 
     public function saveToken($email, $token)
     {
-        $this->db->query("INSERT INTO user_verification (email, token) VALUES (:email, :token)");
-        $this->db->bindValue('email', $email);
-        $this->db->bindValue('token', $token);
+        $user = $this->getUserByEmail($email);
+
+        $this->db->query("
+        INSERT INTO user_verification (user_id, email, token, expired_at)
+        VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 1 DAY))
+    ");
+        $this->db->bindValue(1, $user['id_user']);
+        $this->db->bindValue(2, $email);
+        $this->db->bindValue(3, $token);
         $this->db->execute();
-        return true;
     }
+
 
     public function getEmailByToken($token)
     {
@@ -157,11 +163,24 @@ class UserModel
         return $this->db->single();
     }
 
+    public function getProfile($userId)
+    {
+        $this->db->query("SELECT * FROM user_profile WHERE user_id = :id LIMIT 1");
+        $this->db->bindValue('id', $userId);
+        return $this->db->single();
+    }
+
     public function insertProfile($userId, $data)
     {
+        $imageName = null;
+
+        if (isset($data['image'])) {
+            $imageName = $this->uploadImage($data['image']);
+        }
+
         $this->db->query("
-        INSERT INTO user_profile (user_id, firstname, lastname, birthday, bio)
-        VALUES (:user_id, :firstname, :lastname, :birthday, :bio)
+        INSERT INTO user_profile (user_id, firstname, lastname, birthday, bio, image)
+        VALUES (:user_id, :firstname, :lastname, :birthday, :bio, :image)
     ");
 
         $this->db->bindValue('user_id', $userId);
@@ -169,21 +188,96 @@ class UserModel
         $this->db->bindValue('lastname', $data['lastname']);
         $this->db->bindValue('birthday', $data['birthday']);
         $this->db->bindValue('bio', $data['bio']);
+        $this->db->bindValue('image', $imageName);
 
         return $this->db->execute();
     }
+
     public function updateProfile($userId, $data)
     {
+        $old = $this->getProfile($userId);
+        $currentImage = $old['image'] ?? null;
+
+        if (isset($data['image']) && $data['image']['error'] === UPLOAD_ERR_OK) {
+            $newImage = $this->uploadImage($data['image']);
+            if ($newImage) {
+                $this->deleteOldImage($currentImage);
+                $currentImage = $newImage;
+            }
+        }
+
         $query = "UPDATE user_profile
-                SET firstname = :firstname, lastname = :lastname, birthday = :birthday, bio = :bio
-                WHERE user_id = :user_id";
+              SET firstname = :firstname,
+                  lastname = :lastname,
+                  birthday = :birthday,
+                  bio = :bio,
+                  image = :image
+              WHERE user_id = :user_id";
+
         $this->db->query($query);
         $this->db->bindValue('firstname', $data['firstname']);
         $this->db->bindValue('lastname', $data['lastname']);
         $this->db->bindValue('birthday', $data['birthday']);
-        $this->db->bindValue('bio', $data['bio'] ?? '');
+        $this->db->bindValue('bio', $data['bio']);
+        $this->db->bindValue('image', $currentImage);
         $this->db->bindValue('user_id', $userId);
+
         $this->db->execute();
         return $this->db->rowCount();
+    }
+
+    private function uploadImage($file)
+    {
+        if ($file['error'] !== UPLOAD_ERR_OK) return null;
+        $allowed = ['image/jpeg', 'image/png', 'image/webp'];
+
+        if (!in_array(mime_content_type($file['tmp_name']), $allowed)) {
+            return null;
+        }
+
+        if (!getimagesize($file['tmp_name'])) return null;
+
+        $ext = 'jpg';
+        $name = 'pf_' . uniqid() . '.jpg';
+        $path = __DIR__ . '/../../public/img/uploads/' . $name;
+        move_uploaded_file($file['tmp_name'], $path);
+
+        return $name;
+    }
+
+    public function createResetToken($userId, $token, $expired)
+    {
+        $this->db->query("
+        INSERT INTO password_resets (user_id, token, expires_at)
+        VALUES (:uid, :token, :exp)
+    ");
+        $this->db->bindValue(':uid', $userId);
+        $this->db->bindValue(':token', $token);
+        $this->db->bindValue(':exp', $expired);
+        return $this->db->execute();
+    }
+
+    public function getResetByToken($token)
+    {
+        $this->db->query("
+        SELECT * FROM password_resets
+        WHERE token = :token AND used = 0 AND expires_at > NOW()
+    ");
+        $this->db->bindValue(':token', $token);
+        return $this->db->single();
+    }
+
+    public function markResetUsed($id)
+    {
+        $this->db->query("UPDATE password_resets SET used = 1 WHERE id = :id");
+        $this->db->bindValue(':id', $id);
+        return $this->db->execute();
+    }
+
+
+    private function deleteOldImage($filename)
+    {
+        $path = __DIR__ . '/../../public/img/uploads/' . $filename;
+        if ($filename && file_exists($path)) unlink($path);
     }
 }

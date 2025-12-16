@@ -9,6 +9,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+  <link rel="stylesheet" href="../public/css/style.css">
 </head>
 
 <body class="flex flex-col md:flex-row min-h-screen overflow-x-hidden bg-gradient-to-r from-[#788bff] to-[#5465ff] relative">
@@ -84,11 +86,11 @@
     const togglePassword = document.getElementById("passwordReveal")
 
     togglePassword.addEventListener("click", () => {
-      if(passwordInput.type === "password"){
+      if (passwordInput.type === "password") {
         passwordInput.type = "text"
         togglePassword.classList.add("fa-eye-slash")
         togglePassword.classList.remove("fa-eye")
-      }else{
+      } else {
         passwordInput.type = "password"
         togglePassword.classList.add("fa-eye")
         togglePassword.classList.remove("fa-eye-slash")
@@ -269,7 +271,7 @@
             if (result.redirect) {
               window.location.href = result.redirect;
             } else {
-              window.location.href = "/dashboard";
+              window.location.href = "/user/dashboard";
             }
           }
         });

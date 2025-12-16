@@ -20,10 +20,12 @@ class Dashboard extends Controller
     public function __construct()
     {
         if (session_status() === PHP_SESSION_NONE) session_start();
+
         if (!isset($_SESSION['user'])) {
-            header("Location: " . BASE_URL . "auth/login");
+            header('Location: ' . BASE_URL . 'user/auth/login');
             exit;
         }
+
         $this->userModel = new UserModel();
         $this->userSubjectModel = new UserSubjectModel();
     }
@@ -37,53 +39,64 @@ class Dashboard extends Controller
             exit;
         }
 
-        if (count($this->userSubjectModel->getSubjectsByUser($userId)) == 0) {
+        if (count($this->userSubjectModel->getSubjectsByUser($userId)) === 0) {
             header("Location: " . BASE_URL . "user/profile/subjects");
             exit;
         }
 
-        $notesModel = new UserNotesModel();
-        $progressModel = new UserProgressModel();
-        $streakModel = new UserStreakModel();
-        $sessionModel = new StudySessionModel();
-        $youtubeModel = new YoutubeActivityModel();
+        $notesModel     = new UserNotesModel();
+        $progressModel  = new UserProgressModel();
+        $streakModel    = new UserStreakModel();
+        $sessionModel   = new StudySessionModel();
+        $youtubeModel   = new YoutubeActivityModel();
+        $recommendModel = new StudyRecommendationModel();
 
-        $data['judul'] = "Dashboard";
+        $data['judul']    = "Dashboard";
         $data['username'] = $_SESSION['user']['username'];
 
-        $data['notes_today']      = $notesModel->countToday($userId);
-        $data['word_today']       = $notesModel->wordToday($userId);
-        $data['duration_today']   = $progressModel->durationToday($userId);
-        $data['streak']           = $streakModel->getCurrentStreak($userId);
-        $data['longest_streak']   = $streakModel->getLongestStreak($userId);
-        $data['recent_notes']     = $notesModel->recentNotes($userId);
+        $data['notes_today']    = $notesModel->countToday($userId);
+        $data['word_today']     = $notesModel->wordToday($userId);
+        $data['recent_notes']   = $notesModel->recentNotes($userId);
+
+        $data['streak']         = $streakModel->getCurrentStreak($userId);
+        $data['longest_streak'] = $streakModel->getLongestStreak($userId);
+
+        $pomodoroToday = $progressModel->durationToday($userId);
+        $youtubeToday  = $youtubeModel->totalYoutubeToday($userId);
+        $data['duration_today'] = $pomodoroToday + $youtubeToday;
 
         $chart = $sessionModel->chartLast7Days($userId);
         $data['session_chart_labels'] = $chart['labels'];
         $data['session_chart_data']   = $chart['data'];
-        $data['recent_sessions']      = $sessionModel->recentSessions($userId);
-        $data['recent_youtube']       = $youtubeModel->recentYoutubeSessions($userId);
 
-        $data['productive_day']     = $sessionModel->mostProductiveDay($userId);
-        $data['weekly_minutes']     = $sessionModel->totalMinutesThisWeek($userId);
-        $data['last_week_minutes']  = $sessionModel->totalMinutesLastWeek($userId);
-        $data['weekly_growth']      = $this->calculateGrowth($data['last_week_minutes'], $data['weekly_minutes']);
-        $data['top_subject']        = $sessionModel->topSubject($userId);
-        $data['youtube_minutes']    = $youtubeModel->totalYoutubeThisWeek($userId);
-        $recommendModel = new StudyRecommendationModel();
+        $data['recent_sessions'] = $sessionModel->recentSessions($userId);
+        $data['recent_youtube']  = $youtubeModel->recentYoutubeSessions($userId);
+        $data['total_sessions'] = $sessionModel->totalSessions($userId);
+        $data['productive_day']    = $sessionModel->mostProductiveDay($userId);
+        $data['weekly_minutes']    = $sessionModel->totalMinutesThisWeek($userId);
+        $data['last_week_minutes'] = $sessionModel->totalMinutesLastWeek($userId);
+        $data['weekly_growth']     = $this->calculateGrowth(
+            $data['last_week_minutes'],
+            $data['weekly_minutes']
+        );
+
+        $data['top_subject']     = $sessionModel->topSubject($userId);
+        $data['youtube_minutes'] = $youtubeModel->totalYoutubeThisWeek($userId);
 
         $bestHour = $sessionModel->bestHour($userId);
         $productiveDay = $sessionModel->mostProductiveDay($userId);
 
         if ($bestHour !== null && $productiveDay !== null) {
-            $recommendModel->saveRecommendation($userId, $bestHour . ':00', $productiveDay);
+            $recommendModel->saveRecommendation(
+                $userId,
+                $bestHour . ':00',
+                $productiveDay
+            );
         }
 
         $rec = $recommendModel->getByUser($userId);
-
         $data['rec_best_hour'] = $rec['best_hour'] ?? null;
-        $data['rec_day'] = $rec['most_productive_day'] ?? null;
-
+        $data['rec_day']       = $rec['most_productive_day'] ?? null;
 
         $this->view('user/utility/header', $data);
         $this->view('user/dashboard/index', $data);

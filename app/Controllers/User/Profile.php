@@ -1,4 +1,5 @@
 <?php
+
 namespace FpSmt3\WebTracker\Controllers\User;
 
 use FpSmt3\WebTracker\Core\Controller;
@@ -16,7 +17,7 @@ class Profile extends Controller
     {
         if (session_status() === PHP_SESSION_NONE) session_start();
         if (!isset($_SESSION['user'])) {
-            header("Location: " . BASE_URL . "auth/login");
+            header('Location: ' . BASE_URL . 'user/auth/login');
             exit;
         }
 
@@ -27,7 +28,15 @@ class Profile extends Controller
 
     public function edit()
     {
-        $data['judul'] = "Lengkapi Profil";
+        $id = $_SESSION['user']['id_user'];
+
+        $data['judul'] = 'Profile';
+        $data['profile'] = $this->userModel->getProfileByUserId($id);
+        $data['subjects'] = $this->subjectModel->getAll();
+        $userSubjectModel = new UserSubjectModel();
+        $user_subject_ids = $userSubjectModel->getSubjectIdsByUser($id);
+        $data['user_subject_ids'] = $user_subject_ids;
+
         $this->view('user/utility/header', $data);
         $this->view('user/profile/edit', $data);
         $this->view('user/utility/footer', $data);
@@ -35,41 +44,35 @@ class Profile extends Controller
 
     public function save()
     {
+        header('Content-Type: application/json');
+
         $id = $_SESSION['user']['id_user'];
 
-        $data = [
-            'firstname' => $_POST['firstname'],
-            'lastname' => $_POST['lastname'],
-            'birthday' => $_POST['birthday']
+        $profileData = [
+            'firstname' => $_POST['firstname'] ?? '',
+            'lastname'  => $_POST['lastname'] ?? '',
+            'birthday'  => $_POST['birthday'] ?? null,
+            'bio'       => $_POST['bio'] ?? '',
+            'image'     => $_FILES['image'] ?? null
         ];
 
-        $this->userModel->insertProfile($id, $data);
+        if ($this->userModel->hasProfile($id)) {
+            $this->userModel->updateProfile($id, $profileData);
+        } else {
+            $this->userModel->insertProfile($id, $profileData);
+        }
 
-        header("Location: " . BASE_URL . "user/profile/subjects");
-        exit;
-    }
+        if (isset($_POST['subjects']) && is_array($_POST['subjects'])) {
+            $this->userSubjectModel->setSubjectsForUser($id, $_POST['subjects']);
+        }
 
-    public function subjects()
-    {
-        $id = $_SESSION['user']['id_user'];
+        $_SESSION['profile'] = $this->userModel->getProfileByUserId($id);
 
-        $data['judul'] = "Pilih Mata Kuliah";
-        $data['subjects'] = $this->subjectModel->getAllSubjects();
-        $data['user_subject_ids'] = $this->userSubjectModel->getSubjectIdsByUser($id);
-
-        $this->view('user/utility/header', $data);
-        $this->view('user/profile/subjects', $data);
-        $this->view('user/utility/footer', $data);
-    }
-
-    public function saveSubjects()
-    {
-        $id = $_SESSION['user']['id_user'];
-        $subjectIds = isset($_POST['subjects']) ? $_POST['subjects'] : [];
-
-        $this->userSubjectModel->setSubjectsForUser($id, $subjectIds);
-
-        header("Location: " . BASE_URL . "user/dashboard");
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Profil & mata kuliah berhasil disimpan',
+            'redirect' => BASE_URL . 'user/dashboard'
+        ]);
         exit;
     }
 }
